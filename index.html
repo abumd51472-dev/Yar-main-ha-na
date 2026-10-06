@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#58cc02">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Kana Dojo">
+<title>Kana Dojo</title>
+<style>
+:root{--bg:#f7f7f7;--card:#fff;--tx:#3c3c3c;--mu:#777;--bd:#e5e5e5;--g:#58cc02;--gd:#58a700;--r:#ff4b4b;--b:#1cb0f6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131f24;--card:#1f2f36;--tx:#f1f7fb;--mu:#8fa3ad;--bd:#37464f}}
+:root[data-theme="dark"]{--bg:#131f24;--card:#1f2f36;--tx:#f1f7fb;--mu:#8fa3ad;--bd:#37464f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+#app{max-width:520px;margin:0 auto;padding:16px 16px 120px}
+.top{display:flex;justify-content:space-between;font-weight:800;margin-bottom:14px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab{flex:1;padding:11px 4px;border:2px solid var(--bd);border-bottom-width:4px;border-radius:14px;background:var(--card);color:var(--tx);font-weight:800;font-size:14px}
+.tab.on{border-color:var(--b);color:var(--b)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.unit{background:var(--card);border:2px solid var(--bd);border-bottom-width:5px;border-radius:18px;padding:14px 8px;text-align:center;color:var(--tx);font-size:14px}
+.unit b{display:block;font-size:26px;margin-bottom:4px;letter-spacing:2px}
+.unit small{color:var(--mu)}
+.unit.done{border-color:var(--g)}
+.big{width:100%;margin-top:14px;padding:15px;border:0;border-bottom:4px solid var(--gd);border-radius:14px;background:var(--g);color:#fff;font-weight:800;font-size:16px;letter-spacing:1px}
+.big.bl{background:var(--b);border-color:#1899d6}
+.bar{flex:1;height:14px;background:var(--bd);border-radius:9px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--g);transition:width .3s}
+.lh{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.x{background:none;border:0;font-size:24px;color:var(--mu)}
+.q{text-align:center;font-size:15px;color:var(--mu);margin-bottom:10px}
+.kana{text-align:center;line-height:1.15;margin:10px 0 30px;font-weight:700;word-break:break-word}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{padding:18px 6px;border:2px solid var(--bd);border-bottom-width:5px;border-radius:14px;background:var(--card);color:var(--tx);font-weight:700;word-break:break-word}
+.opt.ok{border-color:var(--g);background:rgba(88,204,2,.15)}
+.opt.no{border-color:var(--r);background:rgba(255,75,75,.15)}
+.fb{position:fixed;left:0;right:0;bottom:0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:none}
+.fb.ok{background:#d7ffb8;color:#58a700;display:block}
+.fb.no{background:#ffdfe0;color:#ea2b2b;display:block}
+.fb div{max-width:488px;margin:0 auto}
+.fb.no .big{background:var(--r);border-color:#ea2b2b}
+.end{text-align:center;padding-top:40px}
+.end .em{font-size:70px}
+textarea{width:100%;height:260px;padding:12px;border:2px solid var(--bd);border-radius:14px;background:var(--card);color:var(--tx);font-size:16px}
+</style></head><body>
+<div id="app"></div>
+<script>
+var H="あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん".split("");
+var K="アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン".split("");
+var R="a i u e o ka ki ku ke ko sa shi su se so ta chi tsu te to na ni nu ne no ha hi fu he ho ma mi mu me mo ya yu yo ra ri ru re ro wa wo n".split(" ");
+var NM=["Vowels","K","S","T","N","H","M","Y","R","W + N"],SZ=[5,5,5,5,5,5,5,3,5,3];
+var units=[],p=0;SZ.forEach(function(n,i){units.push({n:NM[i],a:p,b:p+n});p+=n});
+var W=[
+["Weekdays 曜日",["月曜日|getsuyoubi|Monday","火曜日|kayoubi|Tuesday","水曜日|suiyoubi|Wednesday","木曜日|mokuyoubi|Thursday","金曜日|kinyoubi|Friday","土曜日|doyoubi|Saturday","日曜日|nichiyoubi|Sunday"]],
+["Months 月",["一月|ichigatsu|January","二月|nigatsu|February","三月|sangatsu|March","四月|shigatsu|April","五月|gogatsu|May","六月|rokugatsu|June","七月|shichigatsu|July","八月|hachigatsu|August","九月|kugatsu|September","十月|juugatsu|October","十一月|juuichigatsu|November","十二月|juunigatsu|December"]],
+["Dates 日",["一日|tsuitachi|1st","二日|futsuka|2nd","三日|mikka|3rd","四日|yokka|4th","五日|itsuka|5th","六日|muika|6th","七日|nanoka|7th","八日|youka|8th","九日|kokonoka|9th","十日|tooka|10th","十一日|juuichinichi|11th","十四日|juuyokka|14th","十七日|juushichinichi|17th","十九日|juukunichi|19th","二十日|hatsuka|20th","二十四日|nijuuyokka|24th"]],
+["Numbers 数",["一|ichi|1","二|ni|2","三|san|3","四|yon (shi)|4","五|go|5","六|roku|6","七|nana (shichi)|7","八|hachi|8","九|kyuu (ku)|9","十|juu|10","百|hyaku|100","千|sen|1,000","万|man|10,000"]],
+["Day words",["今日|kyou|Today","明日|ashita|Tomorrow","昨日|kinou|Yesterday","毎日|mainichi|Every day","今週|konshuu|This week","来週|raishuu|Next week","先週|senshuu|Last week","今月|kongetsu|This month","来月|raigetsu|Next month","先月|sengetsu|Last month"]]
+];
+var S={xp:0,streak:0,last:"",done:{},my:""};
+try{var s=JSON.parse(localStorage.getItem("kana")||"null");if(s)S=s;S.done=S.done||{};S.my=S.my||""}catch(e){}
+function save(){try{localStorage.setItem("kana",JSON.stringify(S))}catch(e){}}
+function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
+function rng(a,b){var r=[];for(var i=a;i<b;i++)r.push(i);return r}
+function gen(ix,n){var a=[];while(a.length<n)a=a.concat(sh(ix));return a.slice(0,n)}
+function esc(t){return t.replace(/&/g,"&amp;").replace(/</g,"&lt;")}
+function conv(a){return a.map(function(s){var q=s.split("|");return{j:q[0],r:q[1],m:q[2]}})}
+function kana(t){return (t=="h"?H:K).map(function(c,i){return{j:c,r:R[i],m:R[i]}})}
+function mine(){return S.my.split("\n").map(function(l){var q=l.split(/\||,|\t/).map(function(x){return x.trim()});return q.length>=3&&q[0]&&q[1]&&q[2]?{j:q[0],r:q[1],m:q[2]}:null}).filter(Boolean)}
+function allW(){var a=[];W.forEach(function(w){a=a.concat(conv(w[1]))});return a.concat(mine())}
+var msg="",tab="h",L=null,app=document.getElementById("app");
+function home(){
+  var h=(msg?'<div style="background:#ffdfe0;color:#ea2b2b;padding:12px;border-radius:12px;margin-bottom:12px;font-weight:700">'+msg+'</div>':'')+'<div class="top"><span>🔥 '+S.streak+'</span><span>⭐ '+S.xp+' XP</span></div><div class="tabs">';
+  [["h","ひらがな"],["k","カタカナ"],["w","言葉 Words"]].forEach(function(t){h+='<button class="tab '+(tab==t[0]?"on":"")+'" onclick="setT(\''+t[0]+'\')">'+t[1]+'</button>'});
+  h+='</div><div class="grid">';
+  function u(i,pv,name){var d=S.done[tab+i];return '<button class="unit '+(d?"done":"")+'" onclick="start('+i+')"><b>'+pv+'</b>'+name+'<br><small>'+(d?"✅ "+d+"❤️":"Start")+'</small></button>'}
+  if(tab=="w"){
+    W.forEach(function(w,i){h+=u(i,w[1][0].split("|")[0],w[0])});
+    var m=mine().length;h+=u(-2,"✏️","My words ("+m+")");
+    h+='</div><button class="big" onclick="start(-1)">RANDOM MIX (ALL WORDS)</button><button class="big bl" onclick="editor()">+ ADD MY OWN WORDS</button>';
+  }else{
+    var c=kana(tab);units.forEach(function(x,i){h+=u(i,c.slice(x.a,x.b).slice(0,3).map(function(k){return k.j}).join(""),x.n)});
+    h+='</div><button class="big" onclick="start(-1)">MIXED PRACTICE</button>';
+  }
+  app.innerHTML=h;
+}
+function setT(x){tab=x;msg="";home()}
+function editor(){
+  app.innerHTML='<div class="lh"><button class="x" onclick="home()">✕</button><b>My words</b></div><p class="q">Har line: Japanese | reading | meaning<br>Misal: 時間 | jikan | Time<br>(Kam az kam 2 lines)</p><textarea id="ta">'+esc(S.my)+'</textarea><button class="big" onclick="saveMy()">SAVE</button>';
+}
+function saveMy(){S.my=document.getElementById("ta").value;save();msg="";home()}
+function start(i){
+  var pool,q;msg="";
+  if(tab=="w"){pool=i==-1?allW():i==-2?mine():conv(W[i][1]);if(pool.length<2){msg="Kam az kam 2 words chahiye, aur har line aisi ho: 時間 | jikan | Time (teen hisse, | se alag)";home();return}q=gen(rng(0,pool.length),10)}
+  else{pool=kana(tab);q=i<0?gen(rng(0,pool.length),10):gen(rng(units[i].a,units[i].b),10)}
+  L={pool:pool,q:q,i:0,hearts:3,ok:0,tot:q.length,lock:false,arg:i};ask();
+}
+function ask(){
+  if(L.i>=L.q.length)return finish();
+  var P=L.pool,a=L.q[L.i],it=P[a],kinds=tab=="w"?[["j","m","What does this mean?"],["m","r","How do you say this?"],["j","r","How do you read this?"]]:[["j","r","What sound is this?"],["r","j","Select the correct character"]];
+  var kd=kinds[Math.floor(Math.random()*kinds.length)],qf=kd[0],af=kd[1],pool=[a];
+  sh(rng(0,P.length)).forEach(function(k){if(pool.length<4&&P[k][af]!=it[af])pool.push(k)});
+  pool=sh(pool);L.af=af;
+  var txt=it[qf],sz=qf=="j"?(txt.length<=2?96:txt.length<=3?72:52):40;
+  var osz=af=="j"?26:20;
+  var h='<div class="lh"><button class="x" onclick="home()">✕</button><div class="bar"><i style="width:'+(L.ok/L.tot*100)+'%"></i></div><span>❤️ '+L.hearts+'</span></div><div class="q">'+kd[2]+'</div><div class="kana" style="font-size:'+sz+'px">'+esc(txt)+'</div><div class="opts">';
+  pool.forEach(function(k){h+='<button class="opt" style="font-size:'+osz+'px" onclick="pick(this,'+k+','+a+')">'+esc(P[k][af])+'</button>'});
+  h+='</div><div class="fb" id="fb"></div>';app.innerHTML=h;L.lock=false;
+}
+function pick(el,k,a){
+  if(L.lock)return;L.lock=true;
+  var P=L.pool,it=P[a],good=P[k][L.af]==it[L.af],fb=document.getElementById("fb");
+  el.classList.add(good?"ok":"no");
+  if(good){L.ok++;L.i++}else{L.hearts--;L.q.push(a);L.i++;L.tot++}
+  var full=tab=="w"?it.j+" = "+it.r+" = "+it.m:it.j+" = "+it.r;
+  fb.className="fb "+(good?"ok":"no");
+  fb.innerHTML='<div><b>'+(good?"Correct! 🎉 ":"Oops! ")+esc(full)+'</b><button class="big" onclick="next()">CONTINUE</button></div>';
+}
+function next(){if(L.hearts<=0)return over();ask()}
+function over(){app.innerHTML='<div class="end"><div class="em">💔</div><h1>Out of hearts</h1><p>Koi baat nahi, dobara try karo!</p><button class="big" onclick="start('+L.arg+')">TRY AGAIN</button><button class="big bl" onclick="home()">HOME</button></div>'}
+function finish(){
+  var xp=10+L.hearts*5,t=new Date().toISOString().slice(0,10);S.xp+=xp;
+  if(S.last!=t){var y=new Date(Date.now()-864e5).toISOString().slice(0,10);S.streak=S.last==y?S.streak+1:1;S.last=t}
+  if(L.arg>=0||L.arg==-2)S.done[tab+L.arg]=L.hearts;
+  save();
+  app.innerHTML='<div class="end"><div class="em">🏆</div><h1>Lesson complete!</h1><p>+'+xp+' XP &nbsp; 🔥 '+S.streak+' day streak</p><button class="big" onclick="home()">CONTINUE</button></div>';
+}
+home();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(function(){})}
+</script></body></html>
