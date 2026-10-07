@@ -68,6 +68,7 @@ var W=[
 ];
 var S={xp:0,streak:0,last:"",done:{},my:""};
 try{var s=JSON.parse(localStorage.getItem("kana")||"null");if(s)S=s;S.done=S.done||{};S.my=S.my||""}catch(e){}
+function say(t){try{var u=new SpeechSynthesisUtterance(t);u.lang='ja-JP';u.rate=.8;var v=speechSynthesis.getVoices().filter(function(x){return /^ja/i.test(x.lang)})[0];if(v)u.voice=v;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
 function save(){try{localStorage.setItem("kana",JSON.stringify(S))}catch(e){}}
 function sh(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t}return a}
 function rng(a,b){var r=[];for(var i=a;i<b;i++)r.push(i);return r}
@@ -112,14 +113,14 @@ function ask(){
   pool=sh(pool);L.af=af;
   var txt=it[qf],sz=qf=="j"?(txt.length<=2?96:txt.length<=3?72:52):40;
   var osz=af=="j"?26:20;
-  var h='<div class="lh"><button class="x" onclick="home()">✕</button><div class="bar"><i style="width:'+(L.ok/L.tot*100)+'%"></i></div><span>❤️ '+L.hearts+'</span></div><div class="q">'+kd[2]+'</div><div class="kana" style="font-size:'+sz+'px">'+esc(txt)+'</div><div class="opts">';
+  var h='<div class="lh"><button class="x" onclick="home()">✕</button><div class="bar"><i style="width:'+(L.ok/L.tot*100)+'%"></i></div><span>❤️ '+L.hearts+'</span></div><div class="q">'+kd[2]+'</div><div class="kana" style="font-size:'+sz+'px"'+(qf=="j"?' onclick="say(L.cur)"':'')+'>'+esc(txt)+'</div><div class="opts">';
   pool.forEach(function(k){h+='<button class="opt" style="font-size:'+osz+'px" onclick="pick(this,'+k+','+a+')">'+esc(P[k][af])+'</button>'});
-  h+='</div><div class="fb" id="fb"></div>';app.innerHTML=h;L.lock=false;
+  h+='</div><div class="fb" id="fb"></div>';app.innerHTML=h;L.lock=false;L.cur=it.j;if(qf=="j")setTimeout(function(){say(it.j)},250);
 }
 function pick(el,k,a){
   if(L.lock)return;L.lock=true;
   var P=L.pool,it=P[a],good=P[k][L.af]==it[L.af],fb=document.getElementById("fb");
-  el.classList.add(good?"ok":"no");
+  el.classList.add(good?"ok":"no");say(P[k].j);
   if(good){L.ok++;L.i++}else{L.hearts--;L.q.push(a);L.i++;L.tot++}
   var full=tab=="w"?it.j+" = "+it.r+" = "+it.m:it.j+" = "+it.r;
   fb.className="fb "+(good?"ok":"no");
